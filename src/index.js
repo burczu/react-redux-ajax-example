@@ -1,36 +1,37 @@
 import React, { PropTypes } from 'react';
 import { render } from 'react-dom';
-import { createStore } from 'redux';
+import { createStore, applyMiddleware } from 'redux';
 import { connect, Provider } from 'react-redux';
+import * as actions from './actions';
+import 'babel-polyfill';
+import thunkMiddleware from 'redux-thunk';
 
-const reducer = (state, action) => {
+const reducer = (state = { fetched: false }, action) => {
   switch (action.type) {
-    case 'INCREMENT':
-      return { ...state, counter: state.counter + 1 };
-    case 'DECREMENT':
-      return { ...state, counter: state.counter - 1 };
+    case 'FETCH_STARTED':
+      return { ...state, fetched: false };
+    case 'FETCH_COMPLETED':
+      return { ...state, fetched: true };
     default:
       return state;
     }
 };
 
-const store = createStore(reducer, { counter: 0 });
+const store = createStore(reducer, applyMiddleware(thunkMiddleware));
+
+store.dispatch(actions.fetchAll());
 
 class Counter extends React.Component {
   static propTypes = {
-    counter: PropTypes.Number,
-    onIncrement: PropTypes.func,
-    onDecrement: PropTypes.func
+    fetched: PropTypes.bool
   };
 
   render() {
-    const { counter, onDecrement, onIncrement } = this.props;
+    const { fetched } = this.props;
 
     return (
       <div>
-        <div>{counter}</div>
-        <button onClick={onDecrement}>-</button>
-        <button onClick={onIncrement}>+</button>
+        <div>{`${fetched}`}</div>
       </div>
     );
   }
@@ -41,8 +42,6 @@ const mapStateToProps = (state) => {
 };
 const mapDispatchToProps = (dispatch) => {
   return {
-    onIncrement: () => dispatch({ type: 'INCREMENT' }),
-    onDecrement: () => dispatch({ type: 'DECREMENT' })
   }
 };
 
